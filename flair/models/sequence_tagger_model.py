@@ -349,13 +349,13 @@ class SequenceTagger(flair.nn.Model):
 
                 if verbose:
                     dataloader.set_description(f"Inferencing on batch {i}")
-                results += batch
                 batch = self._filter_empty_sentences(batch)
                 # stop if all sentences are empty
                 if not batch:
                     continue
 
                 feature: torch.Tensor = self.forward(batch)
+                results += batch
                 tags, all_tags = self._obtain_labels(
                     feature=feature,
                     batch_sentences=batch,
@@ -495,7 +495,7 @@ class SequenceTagger(flair.nn.Model):
 
     def forward(self, sentences: List[Sentence]):
 
-        self.embeddings.embed(sentences)
+        sentences = self.embeddings.embed(sentences)
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
         longest_token_sequence_in_batch: int = max(lengths)
