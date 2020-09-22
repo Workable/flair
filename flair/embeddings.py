@@ -10,6 +10,7 @@ from typing import List, Union, Dict, Tuple
 import hashlib
 
 import gensim
+from gensim.models import KeyedVectors
 import numpy as np
 import torch
 from bpemb import BPEmb
@@ -198,132 +199,141 @@ class StackedEmbeddings(TokenEmbeddings):
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
-    def __init__(self, embeddings: str, field: str = None):
+    def __init__(self, embeddings: Union[str, KeyedVectors], field: str = None):
         """
         Initializes classic word embeddings. Constructor downloads required files if not there.
         :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or custom
         If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
         """
-        self.embeddings = embeddings
+        if isinstance(embeddings, str):
+            self.embeddings = embeddings
 
-        old_base_path = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/"
-        )
-        base_path = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/"
-        )
-        embeddings_path_v4 = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/"
-        )
-        embeddings_path_v4_1 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/"
+            old_base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/"
+            )
+            base_path = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/"
+            )
+            embeddings_path_v4 = (
+                "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/"
+            )
+            embeddings_path_v4_1 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/"
 
-        cache_dir = Path("embeddings")
+            cache_dir = Path("embeddings")
 
-        # GLOVE embeddings
-        if embeddings.lower() == "glove" or embeddings.lower() == "en-glove":
-            cached_path(f"{old_base_path}glove.gensim.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(
-                f"{old_base_path}glove.gensim", cache_dir=cache_dir
-            )
+            # GLOVE embeddings
+            if embeddings.lower() == "glove" or embeddings.lower() == "en-glove":
+                cached_path(f"{old_base_path}glove.gensim.vectors.npy", cache_dir=cache_dir)
+                embeddings = cached_path(
+                    f"{old_base_path}glove.gensim", cache_dir=cache_dir
+                )
 
-        # TURIAN embeddings
-        elif embeddings.lower() == "turian" or embeddings.lower() == "en-turian":
-            cached_path(
-                f"{embeddings_path_v4_1}turian.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4_1}turian", cache_dir=cache_dir
-            )
+            # TURIAN embeddings
+            elif embeddings.lower() == "turian" or embeddings.lower() == "en-turian":
+                cached_path(
+                    f"{embeddings_path_v4_1}turian.vectors.npy", cache_dir=cache_dir
+                )
+                embeddings = cached_path(
+                    f"{embeddings_path_v4_1}turian", cache_dir=cache_dir
+                )
 
-        # KOMNINOS embeddings
-        elif embeddings.lower() == "extvec" or embeddings.lower() == "en-extvec":
-            cached_path(
-                f"{old_base_path}extvec.gensim.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{old_base_path}extvec.gensim", cache_dir=cache_dir
-            )
+            # KOMNINOS embeddings
+            elif embeddings.lower() == "extvec" or embeddings.lower() == "en-extvec":
+                cached_path(
+                    f"{old_base_path}extvec.gensim.vectors.npy", cache_dir=cache_dir
+                )
+                embeddings = cached_path(
+                    f"{old_base_path}extvec.gensim", cache_dir=cache_dir
+                )
 
-        # FT-CRAWL embeddings
-        elif embeddings.lower() == "crawl" or embeddings.lower() == "en-crawl":
-            cached_path(
-                f"{base_path}en-fasttext-crawl-300d-1M.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{base_path}en-fasttext-crawl-300d-1M", cache_dir=cache_dir
-            )
+            # FT-CRAWL embeddings
+            elif embeddings.lower() == "crawl" or embeddings.lower() == "en-crawl":
+                cached_path(
+                    f"{base_path}en-fasttext-crawl-300d-1M.vectors.npy", cache_dir=cache_dir
+                )
+                embeddings = cached_path(
+                    f"{base_path}en-fasttext-crawl-300d-1M", cache_dir=cache_dir
+                )
 
-        # FT-CRAWL embeddings
-        elif (
-            embeddings.lower() == "news"
-            or embeddings.lower() == "en-news"
-            or embeddings.lower() == "en"
-        ):
-            cached_path(
-                f"{base_path}en-fasttext-news-300d-1M.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{base_path}en-fasttext-news-300d-1M", cache_dir=cache_dir
-            )
+            # FT-CRAWL embeddings
+            elif (
+                embeddings.lower() == "news"
+                or embeddings.lower() == "en-news"
+                or embeddings.lower() == "en"
+            ):
+                cached_path(
+                    f"{base_path}en-fasttext-news-300d-1M.vectors.npy", cache_dir=cache_dir
+                )
+                embeddings = cached_path(
+                    f"{base_path}en-fasttext-news-300d-1M", cache_dir=cache_dir
+                )
 
-        # twitter embeddings
-        elif embeddings.lower() == "twitter" or embeddings.lower() == "en-twitter":
-            cached_path(
-                f"{old_base_path}twitter.gensim.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{old_base_path}twitter.gensim", cache_dir=cache_dir
-            )
+            # twitter embeddings
+            elif embeddings.lower() == "twitter" or embeddings.lower() == "en-twitter":
+                cached_path(
+                    f"{old_base_path}twitter.gensim.vectors.npy", cache_dir=cache_dir
+                )
+                embeddings = cached_path(
+                    f"{old_base_path}twitter.gensim", cache_dir=cache_dir
+                )
 
-        # two-letter language code wiki embeddings
-        elif len(embeddings.lower()) == 2:
-            cached_path(
-                f"{embeddings_path_v4}{embeddings}-wiki-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4}{embeddings}-wiki-fasttext-300d-1M",
-                cache_dir=cache_dir,
-            )
+            # two-letter language code wiki embeddings
+            elif len(embeddings.lower()) == 2:
+                cached_path(
+                    f"{embeddings_path_v4}{embeddings}-wiki-fasttext-300d-1M.vectors.npy",
+                    cache_dir=cache_dir,
+                )
+                embeddings = cached_path(
+                    f"{embeddings_path_v4}{embeddings}-wiki-fasttext-300d-1M",
+                    cache_dir=cache_dir,
+                )
 
-        # two-letter language code wiki embeddings
-        elif len(embeddings.lower()) == 7 and embeddings.endswith("-wiki"):
-            cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-wiki-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-wiki-fasttext-300d-1M",
-                cache_dir=cache_dir,
-            )
+            # two-letter language code wiki embeddings
+            elif len(embeddings.lower()) == 7 and embeddings.endswith("-wiki"):
+                cached_path(
+                    f"{embeddings_path_v4}{embeddings[:2]}-wiki-fasttext-300d-1M.vectors.npy",
+                    cache_dir=cache_dir,
+                )
+                embeddings = cached_path(
+                    f"{embeddings_path_v4}{embeddings[:2]}-wiki-fasttext-300d-1M",
+                    cache_dir=cache_dir,
+                )
 
-        # two-letter language code crawl embeddings
-        elif len(embeddings.lower()) == 8 and embeddings.endswith("-crawl"):
-            cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-crawl-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-crawl-fasttext-300d-1M",
-                cache_dir=cache_dir,
-            )
+            # two-letter language code crawl embeddings
+            elif len(embeddings.lower()) == 8 and embeddings.endswith("-crawl"):
+                cached_path(
+                    f"{embeddings_path_v4}{embeddings[:2]}-crawl-fasttext-300d-1M.vectors.npy",
+                    cache_dir=cache_dir,
+                )
+                embeddings = cached_path(
+                    f"{embeddings_path_v4}{embeddings[:2]}-crawl-fasttext-300d-1M",
+                    cache_dir=cache_dir,
+                )
 
-        elif not Path(embeddings).exists():
-            raise ValueError(
-                f'The given embeddings "{embeddings}" is not available or is not a valid path.'
-            )
+            elif not Path(embeddings).exists():
+                raise ValueError(
+                    f'The given embeddings "{embeddings}" is not available or is not a valid path.'
+                )
 
-        self.name: str = str(embeddings)
-        self.static_embeddings = True
+            self.name: str = str(embeddings)
+            self.static_embeddings = True
 
-        if str(embeddings).endswith(".bin"):
-            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
-                str(embeddings), binary=True
-            )
+            if str(embeddings).endswith(".bin"):
+                self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
+                    str(embeddings), binary=True
+                )
+            else:
+                try:
+                    self.precomputed_word_embeddings = gensim.models.KeyedVectors.load(
+                        str(embeddings)
+                    )
+                except:
+                    self.precomputed_word_embeddings = embeddings
         else:
-            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load(
-                str(embeddings)
-            )
+            self.precomputed_word_embeddings = embeddings
+            self.name: str = 'custom'
+            self.static_embeddings = True
+
 
         self.field = field
 
